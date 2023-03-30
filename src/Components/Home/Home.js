@@ -1,8 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
+
+import classes from '../Home/Home.module.css'
+
+import Card from '../UI/Card'
 
 function Home() {
   return (
-    <div>Welcome Back!</div>
+    <Card className={classes.home}>Welcome Back!</Card>
   )
 }
 
