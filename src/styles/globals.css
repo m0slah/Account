@@ -4,3 +4,12 @@
   text-align: center;
   box-sizing: border-box;
 }
+
+html {
+  font-family: sans-serif;
+  background: #fff;
+}
+
+main {
+  margin: 6rem;
+}
