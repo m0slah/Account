@@ -1,10 +1,32 @@
 import React, { useReducer, useState, useContext } from "react";
 
 import Card from "../UI/Card";
-import classes from "./Login.module.css";
+import classes from "./Signup.module.css";
 import Button from "../UI/Button";
 import AuthContext from "../store/auth-context";
 import Input from "../UI/Input";
+
+const firstNameReducer = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    const firstLetterIsUpperCase =
+      action.val.charAt(0) === action.val.charAt(0).toUpperCase();
+    const isNotBlank = action.val.trim().length !== 0;
+    return {
+      value: action.val,
+      isValid: firstLetterIsUpperCase && isNotBlank,
+    };
+  }
+  if (action.type === "INPUT_BLUR") {
+    const firstLetterIsUpperCase =
+      state.value.charAt(0) === state.value.charAt(0).toUpperCase();
+    const isNotBlank = state.value.trim().length !== 0;
+    return {
+      value: state.value,
+      isValid: firstLetterIsUpperCase && isNotBlank,
+    };
+  }
+  return { value: "", isValid: false };
+};
 
 const emailReducer = (state, action) => {
   if (action.type === "USER_INPUT") {
@@ -26,8 +48,13 @@ const passwordReducer = (state, action) => {
   return { value: "", isValid: false };
 };
 
-const Login = () => {
+const Signup = () => {
   const [formIsValid, setFormIsValid] = useState(false);
+
+  const [firstNameState, dispatchFirstName] = useReducer(firstNameReducer, {
+    value: "",
+    isValid: null,
+  });
 
   const [emailState, dispatchEmail] = useReducer(emailReducer, {
     value: "",
@@ -41,11 +68,30 @@ const Login = () => {
 
   const authCtx = useContext(AuthContext);
 
+  const { isValid: firstNameIsValid } = firstNameState;
   const { isValid: emailIsValid } = emailState;
   const { isValid: passwordIsValid } = passwordState;
 
+  const firstNameChangeHandler = (event) => {
+    const firstLetterIsUpperCase =
+      event.target.value.charAt(0) ===
+      event.target.value.charAt(0).toUpperCase();
+
+    const isNotBlank = event.target.value.trim().length !== 0;
+    setFormIsValid(firstLetterIsUpperCase && isNotBlank);
+
+    dispatchFirstName({
+      type: "USER_INPUT",
+      val: event.target.value,
+    });
+  };
+
   const emailChangeHandler = (event) => {
-    setFormIsValid(event.target.value.includes("@") && passwordState.isValid);
+    setFormIsValid(
+      event.target.value.includes("@") &&
+        passwordState.isValid &&
+        firstNameState.isValid
+    );
 
     dispatchEmail({
       type: "USER_INPUT",
@@ -54,12 +100,20 @@ const Login = () => {
   };
 
   const passwordChangeHandler = (event) => {
-    setFormIsValid(emailState.isValid && event.target.value.trim().length > 6);
+    setFormIsValid(
+      firstNameState.isValid &&
+        emailState.isValid &&
+        event.target.value.trim().length > 6
+    );
 
     dispatchPassword({
       type: "USER_INPUT",
       val: event.target.value,
     });
+  };
+
+  const validateFirstNameHandler = () => {
+    dispatchEmail({ type: "INPUT_BLUR" });
   };
 
   const validateEmailHandler = () => {
@@ -72,12 +126,27 @@ const Login = () => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    authCtx.onLogin(emailState.value, passwordState.value);
+    authCtx.onSignup(
+      firstNameState.value,
+      emailState.value,
+      passwordState.value
+    );
+
+   
   };
 
   return (
     <Card>
-      <form onSubmit={submitHandler} className={classes.login}>
+      <form className={classes.signup} onSubmit={submitHandler}>
+        <Input
+          id="fname"
+          label="First Name"
+          type="fname"
+          isValid={firstNameIsValid}
+          value={firstNameState.value}
+          onChange={firstNameChangeHandler}
+          onBlur={validateFirstNameHandler}
+        />
         <Input
           id="email"
           label="E-Mail"
@@ -98,12 +167,12 @@ const Login = () => {
         />
         <div className={classes.actions}>
           <Button
-            type="login"
+            type="submit"
             className={classes.btn}
             disabled={!formIsValid}
-            onClick={authCtx.onLogin}
+            onClick={authCtx.onSignup}
           >
-            Login
+            Signup
           </Button>
         </div>
       </form>
@@ -111,4 +180,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
